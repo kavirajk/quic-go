@@ -214,8 +214,11 @@ func (h *sentPacketHandler) ReceivedAck(ackFrame *wire.AckFrame, withPacketNumbe
 
 	priorInFlight := h.bytesInFlight
 	for _, p := range ackedPackets {
-		if encLevel < p.EncryptionLevel {
-			return fmt.Errorf("Received ACK with encryption level %s that acks a packet %d (encryption level %s)", encLevel, p.PacketNumber, p.EncryptionLevel)
+		// TODO(#1534): also check the encryption level for IETF QUIC
+		if !h.version.UsesTLS() {
+			if encLevel < p.EncryptionLevel {
+				return fmt.Errorf("Received ACK with encryption level %s that acks a packet %d (encryption level %s)", encLevel, p.PacketNumber, p.EncryptionLevel)
+			}
 		}
 		// largestAcked == 0 either means that the packet didn't contain an ACK, or it just acked packet 0
 		// It is safe to ignore the corner case of packets that just acked packet 0, because
