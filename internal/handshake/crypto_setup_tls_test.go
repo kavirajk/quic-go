@@ -85,7 +85,7 @@ var _ = Describe("Crypto Setup TLS", func() {
 		}()
 
 		fakeCH := append([]byte{byte(typeClientHello), 0, 0, 6}, []byte("foobar")...)
-		server.HandleData(fakeCH, protocol.EncryptionInitial)
+		server.HandleMessage(fakeCH, protocol.EncryptionInitial)
 		Eventually(done).Should(BeClosed())
 		Expect(runtime.NumGoroutine()).To(Equal(numGoRoutines))
 	})
@@ -118,7 +118,7 @@ var _ = Describe("Crypto Setup TLS", func() {
 		}()
 
 		fakeCH := append([]byte{byte(typeClientHello), 0, 0, 6}, []byte("foobar")...)
-		server.HandleData(fakeCH, protocol.EncryptionHandshake) // wrong encryption level
+		server.HandleMessage(fakeCH, protocol.EncryptionHandshake) // wrong encryption level
 		Eventually(done).Should(BeClosed())
 		Expect(runtime.NumGoroutine()).To(Equal(numGoRoutines))
 	})
@@ -155,9 +155,9 @@ var _ = Describe("Crypto Setup TLS", func() {
 				for {
 					select {
 					case c := <-cChunkChan:
-						server.HandleData(c.data, c.encLevel)
+						server.HandleMessage(c.data, c.encLevel)
 					case c := <-sChunkChan:
-						client.HandleData(c.data, c.encLevel)
+						client.HandleMessage(c.data, c.encLevel)
 					case <-done: // handshake complete
 					}
 				}
@@ -269,7 +269,7 @@ var _ = Describe("Crypto Setup TLS", func() {
 			Expect(len(ch.data) - 4).To(Equal(length))
 
 			// make the go routine return
-			client.HandleData([]byte{42 /* unknown handshake message type */, 0, 0, 1, 0}, protocol.EncryptionInitial)
+			client.HandleMessage([]byte{42 /* unknown handshake message type */, 0, 0, 1, 0}, protocol.EncryptionInitial)
 			Eventually(done).Should(BeClosed())
 		})
 
